@@ -1,0 +1,178 @@
+{% extends '_base.html' %}
+{% load static %}
+{% block title %}NETNOOK{% endblock %}
+
+{% block extra_head %}
+    <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
+{% endblock %}
+
+{% block content %}
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+
+<div class="p-0 m-0"></div>
+    <section class="relative min-h-screen w-full flex items-center justify-center">
+        <div class="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-80 z-10"></div>
+        <div class="relative w-full h-full">
+            <video id="slideImage" class="w-full h-full object-cover" style="max-height: 100vh;" autoplay muted loop>
+                <source src="{% static 'slideimg/Movie.mp4' %}" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+        </div>
+    </section>
+</div>
+    </section>
+    <div class="mb-8 p-4">
+        <h2 class="text-2xl font-bold text-red-600 mb-4">
+            Top pick <span class="text-white">TV shows and movies just for you</span>
+        </h2>
+        <div class="swiper-container">
+            <div class="swiper-wrapper">
+                {% for i in "123456" %}
+                <div class="swiper-slide relative group">
+                    <a href="{% url 'toppick' i %}" class="block">
+                        <img src="{% static 'images/POSTER'|add:i|add:'.png' %}" alt="Movie {{ i }}" class="w-full h-auto mx-auto object-cover transition-transform duration-300 ease-in-out group-hover:scale-105 group-hover:shadow-xl group-hover:ring-4 group-hover:ring-red-500">
+                    </a>
+                    <button class="favorite-btn absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-red-500 to-red-900 text-white py-2 px-4 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 shadow-lg hover:scale-105 hover:ring-4 hover:ring-red-300 hover:shadow-2xl" data-movie-id="{{ i }}">
+                        Add to Favorites
+                    </button>
+                </div>
+                {% endfor %}
+
+    </div>
+</div>
+{% endblock content %}
+
+{% block script %}
+<style>
+    .swiper-container {
+        width: 100%;
+        height: 100%;
+    }
+
+    .swiper-slide {
+        text-align: center;
+        font-size: 18px;
+        background: #fff;
+
+        /* Center slide text vertically */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .alert {
+        position: fixed;
+        bottom: 20px;
+        left: 80%;
+        transform: translateX(-50%);
+        z-index: 9999;
+        padding: 10px 20px;
+        background-color: #f44336;
+        color: white;
+        border-radius: 5px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+        opacity: 0;
+        transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+    
+    .alert-show {
+        opacity: 1;
+        transform: translateY(-20px);
+    }
+    
+    .alert-hidden {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    /* ปุ่มนำทาง */
+    button {
+        transition: all 0.3s ease;
+    }
+
+    #prevSlide, #nextSlide {
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    }
+
+    #prevSlide:hover, #nextSlide:hover {
+        filter: brightness(1.2);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.7);
+    }
+    .favorite-btn {
+        transition: all 0.3s ease;
+    }
+
+    .favorite-btn:hover {
+        background: linear-gradient(to right, rgba(65, 42, 42, 1), rgba(255, 0, 0, 1));
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+    }
+</style>
+
+<script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const swiper = new Swiper('.swiper-container', {
+            slidesPerView: 5, 
+            spaceBetween: 40, 
+            loop: true, 
+            navigation: {
+                nextEl: '.swiper-button-next',
+                prevEl: '.swiper-button-prev',
+            },
+            pagination: {
+                el: '.swiper-pagination',
+                clickable: true,
+            },
+        });
+        const favoriteButtons = document.querySelectorAll('.favorite-btn');
+
+        favoriteButtons.forEach(button => {
+            button.addEventListener('click', function () {
+                const movieId = this.getAttribute('data-movie-id');
+                fetch('/add_favorite/', { 
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({ movie_id: movieId }) 
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data);
+                    showAlert(data.success ? 'Success! Added to favorites!' : 'Error! Failed to add to favorites.', data.success);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showAlert('Please log in to access.', false);
+                });
+            });
+        });
+        function showAlert(message, isSuccess) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-show`; 
+            alertDiv.innerHTML = `
+                <div class="p-2 items-center text-indigo-100 leading-none flex lg:inline-flex" role="alert">
+                    <span class="flex rounded-full bg-red-500 uppercase px-2 py-1 text-xs font-bold mr-3">${isSuccess ? 'Success' : 'Error'}</span>
+                    <span class="font-semibold mr-2 text-left flex-auto">${message}</span>
+                    <svg class="fill-current opacity-75 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M12.95 10.707l.707-.707L8 4.343 6.586 5.757 10.828 10l-4.242 4.243L8 15.657l4.95-4.95z"/></svg>
+                </div>
+            `;
+            document.body.appendChild(alertDiv);
+
+            setTimeout(() => {
+                alertDiv.classList.add('alert-show');
+            }, 10);
+            setTimeout(() => {
+                alertDiv.classList.add('alert-hidden');
+                setTimeout(() => {
+                    alertDiv.remove();
+                }, 500);
+            }, 3000);
+        }
+    });
+</script>
+
+{% endblock script %}

@@ -1,0 +1,147 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}NETNOOK{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="{% static 'output.css' %}" rel="stylesheet">
+    <link rel="icon" href="{% static 'images/logo2.png' %}" type="image/png">
+    <style>
+        /* Loading screen styles */
+        #loading {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: rgba(20, 20, 20, 0.8);
+            z-index: 9999;
+        }
+        .spinner {
+            background-color: red; /* Change to red */
+        }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body style="background-color: rgb(20, 20, 20);" class="text-white font-sans">
+    
+    <div id="loading">
+        <div class="rounded-full h-20 w-20 spinner animate-ping"></div>
+    </div>
+    
+    <nav class="bg-transparent backdrop-blur-lg p-4 lg:px-8 flex flex-col lg:flex-row justify-between items-center shadow-lg fixed top-0 left-0 right-0 z-30 border-b border-gray-700">
+        <div class="flex items-center mb-4 lg:mb-0">
+            <a href="{% url 'index' %}">
+                <img src="{% static 'images/logo.png' %}" alt="Logo" class="h-12 transition-transform duration-300 hover:scale-110">
+            </a>
+        </div>
+    
+        <div class="flex flex-col lg:flex-row lg:space-x-8 lg:items-center w-full lg:w-auto">
+            <form action="{% url 'search_movies' %}" method="get" class="relative flex justify-center w-full lg:w-auto">
+                <input type="text" id="search-input" name="q" placeholder="Search for a movie..." class="w-full lg:w-80 p-3 border border-gray-600 bg-gray-800 bg-opacity-60 text-white rounded-l-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-600 transition duration-300" required autocomplete="off">
+                <button type="submit" class="bg-red-600 text-white px-6 py-3 text-sm rounded-r-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-400 transition duration-300 transform hover:scale-105 shadow-md">
+                    Search
+                </button>
+                <ul id="suggestions" class="absolute left-0 w-full mt-2 bg-white border border-gray-300 rounded-md shadow-lg hidden z-10"></ul>
+            </form>
+    
+
+                      
+
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Confirmation Dialog -->
+    <div id="confirmationDialog" class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 hidden">
+        <div class="bg-white p-6 rounded-lg shadow-lg text-center">
+            <h3 class="text-xl font-semibold text-gray-900">Are you sure you want to logout?</h3>
+            <div class="mt-4 flex justify-center space-x-4">
+                <button id="confirmLogout" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition">Yes</button>
+                <button id="cancelLogout" class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 transition">Cancel</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Hidden Logout Form -->
+    <form id="logout-form" method="POST" action="{% url 'logout' %}" style="display: none;">
+        {% csrf_token %}
+    </form>
+    
+    <!-- JavaScript -->
+    <script>
+        const menuBtn = document.getElementById('menu-btn');
+        const dropdown = document.getElementById('dropdown');
+        const logoutBtn = document.getElementById('logout-btn');
+        const logoutForm = document.getElementById('logout-form');
+    
+        menuBtn.addEventListener('click', function () {
+            dropdown.classList.toggle('hidden');
+        });
+    
+        logoutBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You will be logged out from your session.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, log out',
+                background: '#1f2937',
+                color: '#fff'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    logoutForm.submit();
+                }
+            });
+        });
+    </script>
+    
+    <div class="p-0 m-0 w-full h-full">
+        {% block content %}{% endblock %}
+    </div>
+    
+    <script>
+        setTimeout(function() {
+            document.getElementById('loading').style.display = 'none';
+        }, 1000); 
+    </script>
+    
+
+    {% block script %}{% endblock %}
+    
+    <footer class="bg-black text-white py-8 mt-16">
+        <div class="container mx-auto flex flex-wrap justify-between">
+            <div class="w-full sm:w-1/4 mb-6 sm:mb-0">
+                <img src="{% static 'images/logo.png' %}" alt="Logo" class="h-12">
+            </div>
+            <div class="w-full sm:w-1/4 mb-6 sm:mb-0">
+                <h3 class="font-semibold mb-4">Quick Navigation</h3>
+                <ul>
+                    <li><a href="{% url 'index' %}" class="hover:underline">Home</a></li>
+                    <li><a href="{% url 'about' %}" class="hover:underline">About</a></li>
+                </ul>
+            </div>
+            <div class="w-full sm:w-1/4 mb-6 sm:mb-0">
+                <h3 class="font-semibold mb-4">Contact Us</h3>
+                <p>netnook@gmail.com</p>
+                <p>0123456</p>
+            </div>
+            <div class="w-full sm:w-1/4">
+                <h3 class="font-semibold mb-4">Social Media</h3>
+                <div class="flex space-x-4">
+                    <a href="#"><img src="{% static 'images/facebook.png' %}" alt="Facebook" class="h-8 w-8 transition-transform duration-300 hover:scale-110"></a>
+                    <a href="#"><img src="{% static 'images/ig3.png' %}" alt="Instagram" class="h-8 w-8 transition-transform duration-300 hover:scale-110"></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
